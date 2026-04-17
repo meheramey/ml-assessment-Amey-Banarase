@@ -1,0 +1,173 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyO1o6sQLqz50vW7/AYYEPL2",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/meheramey/ml-assessment-Amey-Banarase/blob/main/part_a\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.preprocessing import StandardScaler\n",
+        "from sklearn.svm import SVC\n",
+        "from sklearn.metrics import accuracy_score, classification_report\n",
+        "\n",
+        "# 1. Load the file with your specific name\n",
+        "# Make sure q1_heart_disease.csv is in your Colab files list\n",
+        "df = pd.read_csv('q1_heart_disease.csv')\n",
+        "\n",
+        "# 2. Simple cleaning: Fill missing numbers with median\n",
+        "df = df.fillna(df.median(numeric_only=True))\n",
+        "\n",
+        "# 3. Fill missing text categories with mode\n",
+        "for col in df.select_dtypes(include=['object']):\n",
+        "    df[col] = df[col].fillna(df[col].mode()[0])\n",
+        "\n",
+        "print(\"Step 1: File loaded and data is clean!\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "157QnTTRdhJG",
+        "outputId": "f23a1ddb-5079-4ba6-9031-131397a9f728"
+      },
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Step 1: File loaded and data is clean!\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# 1. Convert text to numbers (One-Hot Encoding)\n",
+        "df_final = pd.get_dummies(df, drop_first=True)\n",
+        "\n",
+        "# 2. Separate Features (X) and Target (y)\n",
+        "X = df_final.drop('heart_disease', axis=1)\n",
+        "y = df_final['heart_disease']\n",
+        "\n",
+        "# 3. Split: 80% for Training, 20% for Testing\n",
+        "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)\n",
+        "\n",
+        "# 4. Standard Scaling (Crucial for SVM performance)\n",
+        "scaler = StandardScaler()\n",
+        "X_train_scaled = scaler.fit_transform(X_train)\n",
+        "X_test_scaled = scaler.transform(X_test)\n",
+        "\n",
+        "print(\"Step 2: Data encoding and scaling is successful!\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "pZouGgOoeNAp",
+        "outputId": "f558b732-d024-4c7b-ce20-3647fe7e47d8"
+      },
+      "execution_count": 14,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Step 2: Data encoding and scaling is successful!\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "In this step, I performed One-Hot Encoding to convert categorical text data into numerical format. Most importantly, I applied Standard Scaling. Since SVM is a distance-based algorithm, it requires all features to be on the same scale (like Age and Cholesterol) to work correctly. Without scaling, the SVM model's accuracy would drop significantly."
+      ],
+      "metadata": {
+        "id": "u5ABBEnDePk9"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# 1. Initialize SVM with RBF kernel\n",
+        "# RBF is used for handling non-linear relationships in medical data\n",
+        "svm_model = SVC(kernel='rbf', C=1.0, random_state=42)\n",
+        "\n",
+        "# 2. Train the model\n",
+        "svm_model.fit(X_train_scaled, y_train)\n",
+        "\n",
+        "# 3. Predict on test data\n",
+        "y_pred = svm_model.predict(X_test_scaled)\n",
+        "\n",
+        "# 4. Final Accuracy Score\n",
+        "from sklearn.metrics import accuracy_score, classification_report\n",
+        "print(f\"SVM Model Accuracy: {accuracy_score(y_test, y_pred):.2f}\")\n",
+        "print(\"\\nClassification Report:\\n\", classification_report(y_test, y_pred))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ys2-F5PueWrC",
+        "outputId": "ea0ff3d5-5565-4b91-8be2-c833a82e28d3"
+      },
+      "execution_count": 15,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "SVM Model Accuracy: 0.79\n",
+            "\n",
+            "Classification Report:\n",
+            "               precision    recall  f1-score   support\n",
+            "\n",
+            "           0       0.79      0.77      0.78        79\n",
+            "           1       0.78      0.80      0.79        81\n",
+            "\n",
+            "    accuracy                           0.79       160\n",
+            "   macro avg       0.79      0.79      0.79       160\n",
+            "weighted avg       0.79      0.79      0.79       160\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "I implemented the Support Vector Classifier (SVC) using the RBF kernel. I chose RBF because heart disease data often has non-linear patterns. My model achieved an accuracy of 0.79, which is a strong result. This shows that the SVM model is capable of predicting heart disease effectively when the data is properly preprocessed and scaled."
+      ],
+      "metadata": {
+        "id": "ynVXQxNyef-i"
+      }
+    }
+  ]
+}
